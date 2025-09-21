@@ -139,12 +139,17 @@ async def async_fetch_older_users(db_name="airbnb_concurrent.db"):
         await asyncio.sleep(0.15)
         
         # Create age column and update users to have ages for demo
-        await db.execute('ALTER TABLE users ADD COLUMN age INTEGER DEFAULT 25')
+        try:
+            await db.execute('ALTER TABLE users ADD COLUMN age INTEGER DEFAULT 25')
+        except:
+            pass  # Column might already exist
         
         # Update some users to be older than 40
-        await db.execute("UPDATE users SET age = 45 WHERE role = 'host' LIMIT 3")
-        await db.execute("UPDATE users SET age = 42 WHERE role = 'admin'")
-        await db.execute("UPDATE users SET age = 41 WHERE first_name = 'Olivia'")
+        await db.execute("UPDATE users SET age = 45 WHERE role = 'host' AND age IS NULL")
+        await db.execute("UPDATE users SET age = 42 WHERE role = 'admin' AND age IS NULL")
+        await db.execute("UPDATE users SET age = 41 WHERE first_name = 'Olivia' AND age IS NULL")
+        await db.execute("UPDATE users SET age = 48 WHERE first_name = 'Frank' AND age IS NULL")
+        await db.execute("UPDATE users SET age = 43 WHERE first_name = 'Maya' AND age IS NULL")
         
         cursor = await db.execute("SELECT user_id, first_name, last_name, email, role, age FROM users WHERE age > 40")
         older_users = await cursor.fetchall()
