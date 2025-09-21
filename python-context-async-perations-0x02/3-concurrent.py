@@ -111,7 +111,7 @@ async def async_fetch_users(db_name="airbnb_concurrent.db"):
         # Simulate some processing time
         await asyncio.sleep(0.1)
         
-        cursor = await db.execute("SELECT user_id, first_name, last_name, email, role FROM users")
+        cursor = await db.execute("SELECT user_id, first_name, last_name, email, role, COALESCE(age, 25) as age FROM users")
         users = await cursor.fetchall()
         await cursor.close()
         
@@ -123,22 +123,30 @@ async def async_fetch_users(db_name="airbnb_concurrent.db"):
 
 async def async_fetch_older_users(db_name="airbnb_concurrent.db"):
     """
-    Asynchronous function to fetch host users (equivalent to "older" users in context).
+    Asynchronous function to fetch users older than 40 from the database.
     
     Args:
         db_name (str): Name of the database file
         
     Returns:
-        list: Host users from the database
+        list: Users older than 40
     """
-    print("🔍 Starting async_fetch_older_users (hosts)...")
+    print("🔍 Starting async_fetch_older_users...")
     start_time = time.time()
     
     async with aiosqlite.connect(db_name) as db:
         # Simulate some processing time
         await asyncio.sleep(0.15)
         
-        cursor = await db.execute("SELECT user_id, first_name, last_name, email, role FROM users WHERE role = 'host'")
+        # Create age column and update users to have ages for demo
+        await db.execute('ALTER TABLE users ADD COLUMN age INTEGER DEFAULT 25')
+        
+        # Update some users to be older than 40
+        await db.execute("UPDATE users SET age = 45 WHERE role = 'host' LIMIT 3")
+        await db.execute("UPDATE users SET age = 42 WHERE role = 'admin'")
+        await db.execute("UPDATE users SET age = 41 WHERE first_name = 'Olivia'")
+        
+        cursor = await db.execute("SELECT user_id, first_name, last_name, email, role, age FROM users WHERE age > 40")
         older_users = await cursor.fetchall()
         await cursor.close()
         
@@ -163,7 +171,7 @@ async def fetch_concurrently():
     start_time = time.time()
     
     # Execute both queries concurrently using asyncio.gather()
-    all_users, host_users = await asyncio.gather(
+    all_users, older_users = await asyncio.gather(
         async_fetch_users(),
         async_fetch_older_users()
     )
@@ -177,27 +185,27 @@ async def fetch_concurrently():
     # Display results
     print(f"\n📊 RESULTS SUMMARY:")
     print(f"Total users found: {len(all_users)}")
-    print(f"Host users found: {len(host_users)}")
+    print(f"Users older than 40: {len(older_users)}")
     
     print(f"\n👥 ALL USERS:")
-    print("-" * 80)
-    print(f"{'User ID':<40} {'Name':<20} {'Email':<25} {'Role':<10}")
-    print("-" * 80)
+    print("-" * 85)
+    print(f"{'User ID':<40} {'Name':<20} {'Email':<25} {'Age':<5}")
+    print("-" * 85)
     
     for user in all_users:
-        user_id, first_name, last_name, email, role = user
+        user_id, first_name, last_name, email, role, age = user
         full_name = f"{first_name} {last_name}"
-        print(f"{user_id:<40} {full_name:<20} {email:<25} {role:<10}")
+        print(f"{user_id:<40} {full_name:<20} {email:<25} {age:<5}")
     
-    print(f"\n🏠 HOST USERS (Property Owners):")
-    print("-" * 80)
-    print(f"{'User ID':<40} {'Name':<20} {'Email':<25} {'Role':<10}")
-    print("-" * 80)
+    print(f"\n👴 USERS OLDER THAN 40:")
+    print("-" * 85)
+    print(f"{'User ID':<40} {'Name':<20} {'Email':<25} {'Age':<5}")
+    print("-" * 85)
     
-    for user in host_users:
-        user_id, first_name, last_name, email, role = user
+    for user in older_users:
+        user_id, first_name, last_name, email, role, age = user
         full_name = f"{first_name} {last_name}"
-        print(f"{user_id:<40} {full_name:<20} {email:<25} {role:<10}")
+        print(f"{user_id:<40} {full_name:<20} {email:<25} {age:<5}")
     
     # Performance comparison
     print(f"\n⚡ PERFORMANCE ANALYSIS:")
@@ -220,7 +228,7 @@ async def demo_sequential_vs_concurrent():
     seq_start = time.time()
     
     all_users_seq = await async_fetch_users()
-    host_users_seq = await async_fetch_older_users()
+    older_users_seq = await async_fetch_older_users()
     
     seq_end = time.time()
     sequential_time = seq_end - seq_start
@@ -231,7 +239,7 @@ async def demo_sequential_vs_concurrent():
     print(f"\n🚀 Running queries CONCURRENTLY...")
     conc_start = time.time()
     
-    all_users_conc, host_users_conc = await asyncio.gather(
+    all_users_conc, older_users_conc = await asyncio.gather(
         async_fetch_users(),
         async_fetch_older_users()
     )
