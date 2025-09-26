@@ -3,3 +3,4 @@ djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-filter==23.3
 djangorestframework-nested==0.93.4
+djangorestframework-simplejwt==5.3.0
