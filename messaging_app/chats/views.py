@@ -1,23 +1,11 @@
-from rest_framework import viewsets, status, filters
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-from .models import Conversation, Message
-from .serializers import (
-    ConversationSerializer, 
-    ConversationListSerializer, 
-    MessageSerializer,
-    UserSerializer
-)
-from .permissions import (
-    IsParticipantOfConversation,
-    IsParticipantInConversation,
-    IsMessageSenderOrParticipant,
-    IsOwnerOrReadOnly
-)
+from rest_framework import viewsets, filters
+from .models import Message
+from .serializers import MessageSerializer
+from .permissions import IsParticipantOfConversation
+from .pagination import MessagePagination
+from .filters import MessageFilter
+
 
 User = get_user_model()
 
