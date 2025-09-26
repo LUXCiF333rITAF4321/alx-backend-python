@@ -129,17 +129,26 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
 # Django REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'chats.permissions.IsParticipantOfConversation',
+        'rest_framework.permissions.IsAuthenticated',  # global default: only authenticated users
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'chats.pagination.MessagePagination',  # paginate API responses
+    'PAGE_SIZE': 20,  # 20 messages per page
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',  # enable filtering
+        'rest_framework.filters.SearchFilter',                 # enable search
+        'rest_framework.filters.OrderingFilter',               # enable ordering
+    ],
 }
+
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
