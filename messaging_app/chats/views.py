@@ -1,8 +1,19 @@
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, filters, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters
-from .models import Message
-from .serializers import MessageSerializer
-from .permissions import IsParticipantOfConversation
+
+from .models import Conversation, Message
+from .serializers import (
+    ConversationSerializer,
+    ConversationListSerializer,
+    MessageSerializer,
+    UserSerializer,
+)
+from .permissions import IsParticipantOfConversation, IsOwnerOrReadOnly
 from .pagination import MessagePagination
 from .filters import MessageFilter
 
@@ -22,9 +33,6 @@ class ConversationViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
     
     def get_queryset(self):
-        """
-        Return conversations where the current user is a participant
-        """
         return Conversation.objects.filter(
             participants=self.request.user
         ).prefetch_related('participants', 'messages')
@@ -167,8 +175,9 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsParticipantOfConversation]
     serializer_class = MessageSerializer
+    pagination_class = MessagePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['conversation', 'sender', 'sent_at']
+    filterset_class = MessageFilter
     search_fields = ['message_body', 'sender__first_name', 'sender__last_name']
     ordering_fields = ['sent_at']
     ordering = ['sent_at']
@@ -189,14 +198,6 @@ class MessageViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsParticipantOfConversation]
         return [permission() for permission in permission_classes]
-    
-    def list(self, request):
-        conversation_id = request.query_params.get('conversation_id')
-        queryset = self.get_queryset()
-        if conversation_id:
-            queryset = queryset.filter(conversation__conversation_id=conversation_id)
-        serializer = MessageSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def retrieve(self, request, pk=None):
         message = get_object_or_404(self.get_queryset(), message_id=pk)
