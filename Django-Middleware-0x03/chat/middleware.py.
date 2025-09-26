@@ -21,3 +21,49 @@ class RequestLoggingMiddleware:
         logger.info(f"Request: {request.method} {request.get_full_path()}")
         response = self.get_response(request)
         return response
+import time
+from collections import defaultdict
+from django.http import HttpResponseForbidden
+
+
+class OffensiveLanguageMiddleware:
+    """
+    Middleware that limits chat messages per IP.
+    Restricts users to 5 POST requests per minute.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        # Dictionnaire : { ip: [timestamps] }
+        self.message_log = defaultdict(list)
+
+    def __call__(self, request):
+        client_ip = self.get_client_ip(request)
+
+        if request.method == "POST" and "/messages" in request.path:
+            current_time = time.time()
+            # Nettoyer les timestamps vieux de plus d'une minute
+            self.message_log[client_ip] = [
+                ts for ts in self.message_log[client_ip]
+                if current_time - ts < 60
+            ]
+
+            # Vérifier si dépassement du quota
+            if len(self.message_log[client_ip]) >= 5:
+                return HttpResponseForbidden(
+                    "Message limit exceeded. Please wait before sending more."
+                )
+
+            # Enregistrer le timestamp
+            self.message_log[client_ip].append(current_time)
+
+        return self.get_response(request)
+
+    def get_client_ip(self, request):
+        """Récupérer l'adresse IP du client"""
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0]
+        else:
+            ip = request.META.get("REMOTE_ADDR")
+        return ip
