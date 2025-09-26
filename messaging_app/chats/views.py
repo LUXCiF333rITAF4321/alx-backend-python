@@ -1,7 +1,8 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from .models import Conversation, Message
@@ -20,6 +21,11 @@ class ConversationViewSet(viewsets.ModelViewSet):
     ViewSet for handling conversation operations
     """
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['created_at']
+    search_fields = ['participants__first_name', 'participants__last_name', 'participants__email']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
     
     def get_queryset(self):
         """
@@ -170,6 +176,11 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated]
     serializer_class = MessageSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['conversation', 'sender', 'sent_at']
+    search_fields = ['message_body', 'sender__first_name', 'sender__last_name']
+    ordering_fields = ['sent_at']
+    ordering = ['sent_at']
     
     def get_queryset(self):
         """
