@@ -12,6 +12,11 @@ from .serializers import (
     MessageSerializer,
     UserSerializer
 )
+from .permissions import (
+    IsParticipantInConversation,
+    IsMessageSenderOrParticipant,
+    IsOwnerOrReadOnly
+)
 
 User = get_user_model()
 
@@ -20,7 +25,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling conversation operations
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsParticipantInConversation]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['created_at']
     search_fields = ['participants__first_name', 'participants__last_name', 'participants__email']
@@ -42,6 +47,16 @@ class ConversationViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return ConversationListSerializer
         return ConversationSerializer
+    
+    def get_permissions(self):
+        """
+        Get permissions based on action
+        """
+        if self.action == 'create':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAuthenticated, IsParticipantInConversation]
+        return [permission() for permission in permission_classes]
     
     def list(self, request):
         """
@@ -174,7 +189,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling message operations
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsMessageSenderOrParticipant]
     serializer_class = MessageSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['conversation', 'sender', 'sent_at']
@@ -192,6 +207,18 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(
             conversation__in=user_conversations
         ).select_related('sender', 'conversation')
+    
+    def get_permissions(self):
+        """
+        Get permissions based on action
+        """
+        if self.action == 'create':
+            permission_classes = [IsAuthenticated]
+        elif self.action in ['update', 'destroy']:
+            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+        else:
+            permission_classes = [IsAuthenticated, IsMessageSenderOrParticipant]
+        return [permission() for permission in permission_classes]
     
     def list(self, request):
         """
