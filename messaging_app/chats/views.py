@@ -13,6 +13,7 @@ from .serializers import (
     UserSerializer
 )
 from .permissions import (
+    IsParticipantOfConversation,
     IsParticipantInConversation,
     IsMessageSenderOrParticipant,
     IsOwnerOrReadOnly
@@ -25,7 +26,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling conversation operations
     """
-    permission_classes = [IsAuthenticated, IsParticipantInConversation]
+    permission_classes = [IsParticipantOfConversation]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['created_at']
     search_fields = ['participants__first_name', 'participants__last_name', 'participants__email']
@@ -55,7 +56,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             permission_classes = [IsAuthenticated]
         else:
-            permission_classes = [IsAuthenticated, IsParticipantInConversation]
+            permission_classes = [IsParticipantOfConversation]
         return [permission() for permission in permission_classes]
     
     def list(self, request):
@@ -189,7 +190,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling message operations
     """
-    permission_classes = [IsAuthenticated, IsMessageSenderOrParticipant]
+    permission_classes = [IsParticipantOfConversation]
     serializer_class = MessageSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['conversation', 'sender', 'sent_at']
@@ -215,9 +216,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             permission_classes = [IsAuthenticated]
         elif self.action in ['update', 'destroy']:
-            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+            permission_classes = [IsParticipantOfConversation, IsOwnerOrReadOnly]
         else:
-            permission_classes = [IsAuthenticated, IsMessageSenderOrParticipant]
+            permission_classes = [IsParticipantOfConversation]
         return [permission() for permission in permission_classes]
     
     def list(self, request):
