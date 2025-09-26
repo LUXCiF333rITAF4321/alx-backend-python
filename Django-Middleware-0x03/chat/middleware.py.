@@ -1,0 +1,23 @@
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+class RequestLoggingMiddleware:
+    """
+    Middleware pour logger chaque requête dans requests.log
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+        # Configure le logger pour écrire dans requests.log
+        logging.basicConfig(
+            filename='requests.log',
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s'
+        )
+
+    def __call__(self, request):
+        # Log l'URL et la méthode
+        logger.info(f"Request: {request.method} {request.get_full_path()}")
+        response = self.get_response(request)
+        return response
