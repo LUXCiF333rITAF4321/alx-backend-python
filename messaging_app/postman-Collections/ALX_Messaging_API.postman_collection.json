@@ -1,36 +1,31 @@
 {
   "info": {
     "name": "ALX Messaging API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_postman_id": "YOUR_UUID_HERE"
+    "_postman_id": "12345-67890-abcdef",
+    "description": "Collection to test messaging_app endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Auth - Login",
+      "name": "Login",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
-        "url": { "raw": "{{base_url}}/api/token/", "host": ["{{base_url}}"], "path": ["api", "token", ""] },
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"username\": \"user@example.com\",\n    \"password\": \"yourpassword\"\n}"
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Auth - Refresh Token",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "url": { "raw": "{{base_url}}/api/token/refresh/", "host": ["{{base_url}}"], "path": ["api", "token", "refresh", ""] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+          "raw": "{\"username\":\"testuser\",\"password\":\"testpass\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/token/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api","token"]
         }
       },
       "response": []
@@ -40,59 +35,28 @@
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Authorization", "value": "Bearer {{access_token}}" },
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
-        "url": { "raw": "{{base_url}}/api/conversations/", "host": ["{{base_url}}"], "path": ["api", "conversations", ""] },
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"participants_ids\": [2, 3]\n}"
+          "raw": "{\"participants_ids\": [2,3]}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/conversations/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["api","conversations"]
         }
-      },
-      "response": []
-    },
-    {
-      "name": "List Conversations",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{access_token}}" }
-        ],
-        "url": { "raw": "{{base_url}}/api/conversations/", "host": ["{{base_url}}"], "path": ["api", "conversations", ""] }
-      },
-      "response": []
-    },
-    {
-      "name": "Send Message",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{access_token}}" },
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "url": { "raw": "{{base_url}}/api/messages/send_message/", "host": ["{{base_url}}"], "path": ["api", "messages", "send_message", ""] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"conversation_id\": 1,\n    \"message_body\": \"Hello, this is a test message\"\n}"
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "List Messages",
-      "request": {
-        "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{access_token}}" }
-        ],
-        "url": { "raw": "{{base_url}}/api/messages/?conversation_id=1", "host": ["{{base_url}}"], "path": ["api", "messages", ""], "query": [{ "key": "conversation_id", "value": "1" }] }
       },
       "response": []
     }
-  ],
-  "variable": [
-    { "key": "base_url", "value": "http://127.0.0.1:8000" },
-    { "key": "access_token", "value": "" },
-    { "key": "refresh_token", "value": "" }
   ]
 }
